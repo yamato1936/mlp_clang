@@ -14,7 +14,7 @@ void	backward(t_mlp *mlp, double *input, double *target)
 	int		l;
 	int		i;
 	int		j;
-	int		k;
+	// int		k;
 
 	/* output layer delta = pred - target */
 	t_layer *out = &mlp->layers[mlp->num_layers - 1];

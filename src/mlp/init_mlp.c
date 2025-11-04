@@ -1,108 +1,119 @@
 #include "mlp.h"
 #include <stdlib.h>
-#include <string.h>
+#include <stdio.h>
 
-static double	**alloc_2d(int rows, int cols)
+/* 2次元配列（weights）の確保関数 */
+static double **alloc_2d(int rows, int cols)
 {
-	double	**m;
-	int		i;
-
-	m = malloc(sizeof(double *) * rows);
+	double **m = malloc(sizeof(double *) * rows);
 	if (!m)
 		return (NULL);
-	i = 0;
-	while (i < rows)
+	for (int i = 0; i < rows; i++)
 	{
 		m[i] = malloc(sizeof(double) * cols);
 		if (!m[i])
 		{
-			/* free previously allocated */
 			while (i-- > 0)
 				free(m[i]);
 			free(m);
 			return (NULL);
 		}
-		i++;
 	}
 	return (m);
 }
 
-t_mlp	init_mlp(int *sizes, int num_layers, double lr)
+/* 多層パーセプトロン初期化関数 */
+t_mlp init_mlp(int *sizes, int num_layers, double lr)
 {
-	t_mlp	mlp;
-	int		l;
-	int		i;
-	int		j;
-
+	t_mlp mlp;
+	mlp.layers = NULL;
 	mlp.num_layers = num_layers - 1;
+	mlp.lr = lr;
+
+	/* num_layersが不正な場合はNULLを返す */
+	if (mlp.num_layers <= 0)
+	{
+		fprintf(stderr, "init_mlp: invalid num_layers (%d)\n", num_layers);
+		return (mlp);
+	}
+
 	mlp.layers = malloc(sizeof(t_layer) * mlp.num_layers);
 	if (!mlp.layers)
 	{
-		mlp.layers = NULL;
-		return (mlp);
+		fprintf(stderr, "init_mlp: malloc failed for layers\n");
+		exit(EXIT_FAILURE);
 	}
-	mlp.lr = lr;
-	l = 0;
-	while (l < mlp.num_layers)
+
+	for (int l = 0; l < mlp.num_layers; l++)
 	{
-		mlp.layers[l].in_dim = sizes[l];
-		mlp.layers[l].out_dim = sizes[l + 1];
-		mlp.layers[l].w = alloc_2d(mlp.layers[l].out_dim,
-					   mlp.layers[l].in_dim);
-		mlp.layers[l].b = malloc(sizeof(double) * mlp.layers[l].out_dim);
-		mlp.layers[l].a = malloc(sizeof(double) * mlp.layers[l].out_dim);
-		mlp.layers[l].z = malloc(sizeof(double) * mlp.layers[l].out_dim);
-		mlp.layers[l].delta = malloc(sizeof(double) * mlp.layers[l].out_dim);
-		if (!mlp.layers[l].w || !mlp.layers[l].b || !mlp.layers[l].a
-		    || !mlp.layers[l].z || !mlp.layers[l].delta)
+		int in_dim = sizes[l];
+		int out_dim = sizes[l + 1];
+
+		mlp.layers[l].in_dim = in_dim;
+		mlp.layers[l].out_dim = out_dim;
+		mlp.layers[l].w = alloc_2d(out_dim, in_dim);
+		mlp.layers[l].b = malloc(sizeof(double) * out_dim);
+		mlp.layers[l].a = malloc(sizeof(double) * out_dim);
+		mlp.layers[l].z = malloc(sizeof(double) * out_dim);
+		mlp.layers[l].delta = malloc(sizeof(double) * out_dim);
+
+		if (!mlp.layers[l].w || !mlp.layers[l].b || !mlp.layers[l].a ||
+		    !mlp.layers[l].z || !mlp.layers[l].delta)
 		{
-			/* TODO: free all allocated; simplified here */
-			return (mlp);
+			fprintf(stderr, "init_mlp: allocation failed at layer %d\n", l);
+			/* ここまでの層をすべて解放 */
+			for (int ll = 0; ll <= l; ll++)
+			{
+				if (mlp.layers[ll].w)
+				{
+					for (int i = 0; i < mlp.layers[ll].out_dim; i++)
+						free(mlp.layers[ll].w[i]);
+					free(mlp.layers[ll].w);
+				}
+				free(mlp.layers[ll].b);
+				free(mlp.layers[ll].a);
+				free(mlp.layers[ll].z);
+				free(mlp.layers[ll].delta);
+			}
+			free(mlp.layers);
+			exit(EXIT_FAILURE);
 		}
-		/* init weights small random, biases zero */
-		i = 0;
-		while (i < mlp.layers[l].out_dim)
+
+		/* 重みとバイアスの初期化 */
+		for (int i = 0; i < out_dim; i++)
 		{
 			mlp.layers[l].b[i] = 0.0;
-			j = 0;
-			while (j < mlp.layers[l].in_dim)
-			{
-				mlp.layers[l].w[i][j] =
-					(((double)rand() / RAND_MAX) - 0.5) * 0.2;
-				j++;
-			}
-			i++;
+			for (int j = 0; j < in_dim; j++)
+				mlp.layers[l].w[i][j] = (((double)rand() / RAND_MAX) - 0.5) * 0.2;
 		}
-		l++;
 	}
+
+	/* デバッグ表示 */
+	fprintf(stderr, "init_mlp: successfully allocated %d layers\n", mlp.num_layers);
+	for (int l = 0; l < mlp.num_layers; l++)
+		fprintf(stderr, "  layer %d: in=%d out=%d w=%p\n",
+		        l, mlp.layers[l].in_dim, mlp.layers[l].out_dim, (void*)mlp.layers[l].w);
+
 	return (mlp);
 }
 
-void	free_mlp(t_mlp *mlp)
+/* MLPの全解放 */
+void free_mlp(t_mlp *mlp)
 {
-	int	l;
-	int	i;
-
 	if (!mlp || !mlp->layers)
-		return ;
-	l = 0;
-	while (l < mlp->num_layers)
+		return;
+	for (int l = 0; l < mlp->num_layers; l++)
 	{
 		if (mlp->layers[l].w)
 		{
-			i = 0;
-			while (i < mlp->layers[l].out_dim)
-			{
+			for (int i = 0; i < mlp->layers[l].out_dim; i++)
 				free(mlp->layers[l].w[i]);
-				i++;
-			}
 			free(mlp->layers[l].w);
 		}
 		free(mlp->layers[l].b);
 		free(mlp->layers[l].a);
 		free(mlp->layers[l].z);
 		free(mlp->layers[l].delta);
-		l++;
 	}
 	free(mlp->layers);
 	mlp->layers = NULL;

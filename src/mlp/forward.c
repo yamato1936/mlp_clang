@@ -1,38 +1,35 @@
 #include "mlp.h"
 #include "ft_math.h"
+#include <stdlib.h>
 
-void	forward(t_mlp *mlp, double *input)
+double *forward(t_mlp *mlp, double *input)
 {
-	int		l;
-	int		i;
-	int		j;
-	int		k;
-	double	sum;
-	double	*prev;
+	int l, i, k;
+	double sum;
+	double *prev;
+
+	if (!mlp || !mlp->layers || !input)
+		return NULL;
 
 	prev = input;
-	l = 0;
-	while (l < mlp->num_layers)
+	for (l = 0; l < mlp->num_layers; l++)
 	{
-		i = 0;
-		while (i < mlp->layers[l].out_dim)
+		t_layer *layer = &mlp->layers[l];
+
+		for (i = 0; i < layer->out_dim; i++)
 		{
-			sum = mlp->layers[l].b[i];
-			k = 0;
-			while (k < mlp->layers[l].in_dim)
-			{
-				sum += mlp->layers[l].w[i][k] * prev[k];
-				k++;
-			}
-			mlp->layers[l].z[i] = sum;
-			/* hidden layers use sigmoid, output layer keep logits (no activation) */
+			sum = (layer->b) ? layer->b[i] : 0.0;
+			for (k = 0; k < layer->in_dim; k++)
+				sum += layer->w[i][k] * prev[k];
+			layer->z[i] = sum;
+
+			// 活性化関数の適用
 			if (l < mlp->num_layers - 1)
-				mlp->layers[l].a[i] = sigmoid(sum);
+				layer->a[i] = sigmoid(sum);
 			else
-				mlp->layers[l].a[i] = sum;
-			i++;
+				layer->a[i] = sum; // 出力層は softmax 前のlogits
 		}
-		prev = mlp->layers[l].a;
-		l++;
+		prev = layer->a;
 	}
+	return mlp->layers[mlp->num_layers - 1].a;
 }

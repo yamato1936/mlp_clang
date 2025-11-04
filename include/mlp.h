@@ -13,6 +13,7 @@ typedef struct s_layer
 	double	*a;     /* activation: hidden -> sigmoid, output -> logits/probs */
 	double	*z;     /* pre-activation (linear) */
 	double	*delta; /* delta for backprop */
+	double	*output; /* for momentum (not used currently) */
 }	t_layer;
 
 typedef struct s_mlp
@@ -25,7 +26,7 @@ typedef struct s_mlp
 /* core */
 t_mlp	init_mlp(int *sizes, int num_layers, double lr);
 void	free_mlp(t_mlp *mlp);
-void	forward(t_mlp *mlp, double *input);
+double	*forward(t_mlp *mlp, double *input);
 void	backward(t_mlp *mlp, double *input, double *target);
 void	update_weights(t_mlp *mlp, double *input);
 

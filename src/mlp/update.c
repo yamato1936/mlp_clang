@@ -14,7 +14,7 @@ void	update_weights(t_mlp *mlp, double *input)
 	int	l;
 	int	i;
 	int	j;
-	int	k;
+	// int	k;
 	double	*prev;
 
 	l = 0;
