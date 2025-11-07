@@ -3,6 +3,8 @@
 
 double	sigmoid(double x);
 double	dsigmoid(double y);
+double	relu(double x);
+double	drelu(double x);
 
 void	softmax(double *x, int n);
 double	cross_entropy(double *pred, double *target, int n);
