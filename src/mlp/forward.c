@@ -25,7 +25,7 @@ double *forward(t_mlp *mlp, double *input)
 
 			// 活性化関数の適用
 			if (l < mlp->num_layers - 1)
-				layer->a[i] = sigmoid(sum);
+				layer->a[i] = relu(sum);
 			else
 				layer->a[i] = sum; // 出力層は softmax 前のlogits
 		}
