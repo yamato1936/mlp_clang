@@ -5,16 +5,16 @@
 
 int	main(void)
 {
-	int		sizes[3];
+	int		sizes[] = {
+		784, 512, 256, 128, 64, 10
+	};
+	int		num_layers = sizeof(sizes) / sizeof(sizes[0]);
 	t_mlp	mlp;
 
-	sizes[0] = 784;
-	sizes[1] = 128;
-	sizes[2] = 10;
 	srand((unsigned)time(NULL));
 
-	/* num_layers should be the number of elements in sizes (3) */
-	mlp = init_mlp(sizes, 3, 0.01);
+	/* num_layers should be the number of elements in sizes */
+	mlp = init_mlp(sizes, num_layers, 0.01);
 	if (mlp.layers == NULL)
 	{
 		printf("init failed\n");
