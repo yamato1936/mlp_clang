@@ -40,8 +40,8 @@ void	backward(t_mlp *mlp, double *input, double *target)
 				sum += next->delta[j] * next->w[j][i];
 				j++;
 			}
-			/* derivative of sigmoid; layer->a holds sigmoid(layer->z) */
-			layer->delta[i] = sum * dsigmoid(layer->a[i]);
+			/* derivative of ReLU using pre-activation */
+			layer->delta[i] = sum * drelu(layer->z[i]);
 			i++;
 		}
 		l--;
