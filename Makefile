@@ -14,6 +14,7 @@ SRC = \
 	src/ft_math/sigmoid.c \
 	src/ft_math/softmax.c \
 	src/ft_math/cross_entropy.c \
+	src/ft_math/relu.c\
 	src/mnist/mnist_loader.c \
 	src/mnist/mnist_preprocess.c
 
