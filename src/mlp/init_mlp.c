@@ -1,6 +1,7 @@
 #include "mlp.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include <math.h>
 
 /* 2次元配列（weights）の確保関数 */
 static double **alloc_2d(int rows, int cols)
@@ -80,12 +81,16 @@ t_mlp init_mlp(int *sizes, int num_layers, double lr)
 		}
 
 		/* 重みとバイアスの初期化 */
+		double limit = sqrt(6.0 / in_dim);
 		for (int i = 0; i < out_dim; i++)
 		{
 			mlp.layers[l].b[i] = 0.0;
 			for (int j = 0; j < in_dim; j++)
-				mlp.layers[l].w[i][j] = (((double)rand() / RAND_MAX) - 0.5) * 0.2;
-		}
+			{
+				double r = ((double)rand() / RAND_MAX) * 2.0 - 1.0;
+				mlp.layers[l].w[i][j] = r * limit;	
+			}
+		}			
 	}
 
 	/* デバッグ表示 */
