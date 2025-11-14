@@ -23,6 +23,15 @@ typedef struct s_mlp
 	double	lr;
 }	t_mlp;
 
+typedef struct s_grad_accum
+{
+	double	***dw;	/* [num_layers][out_dim][in_dim] */
+	double	**db;	/* [num_layers][out_dim] */
+	int		*out_dims;	/* [num_layers] */
+	int		*in_dims;	/* [num_layers] */
+	int		num_layers;
+}	t_grad_accum;
+
 /* core */
 t_mlp	init_mlp(int *sizes, int num_layers, double lr);
 void	free_mlp(t_mlp *mlp);
