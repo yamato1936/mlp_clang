@@ -36,13 +36,15 @@ static int	argmax(double *arr, int n)
 void	train_mnist(t_mlp *mlp, const char *train_img,
 		    const char *train_lbl, int epochs, int limit)
 {
-	t_mnist	images;
-	t_mnist	labels; /* reuse struct for labels loader */
-	int		i;
-	int		e;
-	int		samples;
-	double	loss;
-	double	*target;
+	t_mnist			images;
+	t_mnist			labels;
+	int				e;
+	int				samples;
+	int				i;
+	int				out_dim;
+	double			*target;
+	double			loss;
+	int				correct;
 
 	images = load_mnist_images(train_img, limit);
 	labels = load_mnist_labels(train_lbl, limit);
@@ -57,13 +59,13 @@ void	train_mnist(t_mlp *mlp, const char *train_img,
 	while (e < epochs)
 	{
 		loss = 0.0;
-		int correct = 0;
+		correct = 0;
 
 		i = 0;
 		while (i < samples)
 		{
 			/* forward */
-			output = forward(mlp, images.images[i]);
+			forward(mlp, images.images[i]);
 			/* prepare target */
 			target = make_one_hot(labels.labels[i], out_dim);
 			if (!target)
