@@ -62,10 +62,11 @@ void	train_mnist(t_mlp *mlp, const char *train_img,
 		while (i < samples)
 		{
 			/* forward */
-			double *output = forward(mlp, images.images[i]);   // forward が戻り値を返す形にしておく
-			softmax(output, mlp->layers[mlp->num_layers - 1].out_dim); // ← 追加！
+			output = forward(mlp, images.images[i]);
 			/* prepare target */
-			target = make_one_hot(labels.labels[i], mlp->layers[mlp->num_layers - 1].out_dim);
+			target = make_one_hot(labels.labels[i], out_dim);
+			if (!target)
+				break ;
 			/* compute loss (softmax + cross entropy) */
 			loss += compute_loss(mlp, target);
 			/* backward */
@@ -74,16 +75,14 @@ void	train_mnist(t_mlp *mlp, const char *train_img,
 			update_weights(mlp, images.images[i]);
 
 			/* accuracy */
-			int pred = argmax(output, mlp->layers[mlp->num_layers - 1].out_dim);
-			if (pred == labels.labels[i])
+			if (argmax(mlp->layers[mlp->num_layers - 1].a, out_dim) == labels.labels[i])
 				correct++;
 
 			free(target);
 			i++;
 		}
-
-		double accuracy = (double)correct / samples * 100.0;
-		printf("Epoch %d, Loss %.6f, Accuracy %.2f%%\n", e, loss / samples, accuracy);
+		printf("Epoch %d, Loss %.6f, Accuracy %.2f%%\n",
+			e, loss / (double)samples, (double)correct / (double)samples * 100.0);
 		e++;
 	}
 
