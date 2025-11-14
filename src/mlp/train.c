@@ -52,6 +52,7 @@ void	train_mnist(t_mlp *mlp, const char *train_img,
 		return ;
 	}
 	samples = images.count;
+	out_dim = mlp->layers[mlp->num_layers - 1].out_dim;
 	e = 0;
 	while (e < epochs)
 	{
