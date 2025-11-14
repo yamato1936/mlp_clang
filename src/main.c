@@ -6,7 +6,7 @@
 int	main(void)
 {
 	int		sizes[] = {
-		784, 512, 256, 128, 64, 10
+		784, 256, 128, 10
 	};
 	int		num_layers = sizeof(sizes) / sizeof(sizes[0]);
 	t_mlp	mlp;
